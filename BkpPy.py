@@ -1,8 +1,5 @@
-import logging;import win32com.client;import os;import winreg;import time
+import logging;import win32com.client;import os;import winreg;import time;import datetime
 #Definindo a pasta documento
-
-email=["TESTE 01","TESTE 2","TESTE 3","Americanaas"]
-
 
 def get_documents_folder():
     try:
@@ -20,8 +17,12 @@ def get_documents_folder():
 
 
 
-documents_folder = get_documents_folder()
-print(documents_folder)
+vld_dire = get_documents_folder()[0]
+if vld_dire == "C":
+    documents_folder = get_documents_folder()
+else:
+    documents_folder = os.path.dirname(os.path.realpath(__file__))
+
 
 #Criando nomenclatura para o Log
 from datetime import datetime
@@ -39,27 +40,28 @@ logging.basicConfig(filename=f'{documents_folder}{dt_formatada}.log',
 
 # Adicionando uma mensagem ao log
 
-logging.debug(f"Data registrada - Hora Registrada - Atividade - Status ")
-logging.debug(f"{hr_exec} - Inicio BkpPy - 0")
+logging.debug(f"Data registrada - Hora Registrada - Atividade - Status - Tars")
+logging.debug(f"{hr_exec} - Inicio BkpPy - 0 - Sistema")
 
 time.sleep(1)
 
 #Conectar com o OUTLOOOK
 
 outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
-logging.debug(f"{hr_exec} - Conexão com o Outlook realizada com sucesso - 2")
+logging.debug(f"{hr_exec} - Conexão com o Outlook realizada com sucesso - 2 - Sistema")
 inbox = outlook.GetDefaultFolder(6)  # 6 é o código para a pasta de entrada
 messages = inbox.Items
+messages.Sort("[ReceivedTime]", True)
 Pasta_despache="C:\\Windows\\Temp\\"
 erro="Error"
-
-for subject in email:
-    message = messages.Find(f"[Subject] = '{subject}'")
-    if message:
-        logging.debug(f"{hr_exec} - Email com assunto '{subject}' encontrado com sucesso - 3")
+today = datetime.now().date()
+for message in messages:
+    if "Duplidata Backup Log" in message.Subject and message.ReceivedTime.date() == today:
+        tars = message.Subject[-5:]
+        logging.debug(f"{hr_exec} - Email do tars assunto '{tars}' encontrado com sucesso - 3 - {tars}")
 
         if message.Attachments.Count == 0:
-            logging.debug(f"{hr_exec} - E-mail sem anexo 6")
+            logging.debug(f"{hr_exec} - E-mail do tars {tars} sem anexo - 6 - {tars}")
         else:
                 for attachment in message.Attachments:
                     attachment_name = attachment.FileName
@@ -69,7 +71,7 @@ for subject in email:
 
 
                         if primeiras_quatro_letras == "diff":  # Se encontrar um documento Diff
-                            logging.debug(f"{hr_exec} - Localizado anexo Diff em anexo - D")
+                            logging.debug(f"{hr_exec} - Localizado anexo Diff em anexo - D - {tars}")
                             if attachment.FileName.endswith(".txt"):
                                 file_path = f"{Pasta_despache}{hr_log}.txt"
                                 try:
@@ -77,31 +79,31 @@ for subject in email:
                                     with open(file_path, "r") as file:
                                         content = file.read()
                                         logging.debug(
-                                            f"{hr_exec} - realizando a leitura do anexo {primeiras_quatro_letras} - 1")
+                                            f"{hr_exec} - realizando a leitura do anexo {primeiras_quatro_letras} - 1 - Sistema")
                                         if erro in content:
                                             logging.debug(
-                                                f"{hr_exec} - Erro encontrado no log, um ou mais documentos não foram copiados - K")
+                                                f"{hr_exec} - Erro encontrado no log, um ou mais documentos não foram copiados - K - {tars}")
                                         else:
-                                            logging.debug(f"{hr_exec} - Log do hotel está OK - L")
+                                            logging.debug(f"{hr_exec} - Log do hotel está OK - L - {tars}")
                                 except ValueError as e:
-                                    logging.debug(f"{hr_exec} - Erro ao copiar ao conteudo - X")
-                                    logging.debug(f"{hr_exec} - Tentativa de leitura com metodo diferente - B")
+                                    logging.debug(f"{hr_exec} - Erro ao copiar ao conteudo - X - {tars}")
+                                    logging.debug(f"{hr_exec} - Tentativa de leitura com metodo diferente - B - {tars}")
                                     try:
                                         with open(file_path, "r", encoding="utf-8") as file:
                                             content = file.read()
                                             if erro in content:
                                                 logging.debug(
-                                                    f"{hr_exec} - Erro encontrado no log, um ou mais documentos não foram copiados - K")
+                                                    f"{hr_exec} - Erro encontrado no log, um ou mais documentos não foram copiados - K - {tars}")
                                             else:
-                                                logging.debug(f"{hr_exec} - Log do hotel está OK - L")
+                                                logging.debug(f"{hr_exec} - Log do hotel está OK - L - {tars}")
                                     except Exception as e:
-                                        logging.debug(f"{hr_exec} - Tentativa com o novo metodo falhado - 8")
+                                        logging.debug(f"{hr_exec} - Tentativa com o novo metodo falhado - 8 - {tars}")
                             else:
                                 logging.debug(
-                                    f"{hr_exec} - Documento {primeiras_quatro_letras} está com conteudo vazio - 9")
+                                    f"{hr_exec} - Documento {primeiras_quatro_letras} está com conteudo vazio - 9 - {tars}")
 
                         if primeiras_quatro_letras == "full": # Se encontrar um documento Full
-                            logging.debug(f"{hr_exec} - Localizado anexo Full em anexo - F")
+                            logging.debug(f"{hr_exec} - Localizado anexo Full em anexo - F - {tars}")
                             if attachment.FileName.endswith(".txt"):
                                 file_path = f"{Pasta_despache}{hr_log}.txt"
                                 try:
@@ -109,29 +111,32 @@ for subject in email:
                                     with open(file_path, "r") as file:
                                         content = file.read()
                                         logging.debug(
-                                            f"{hr_exec} - realizando a leitura do anexo {primeiras_quatro_letras} - 1")
+                                            f"{hr_exec} - realizando a leitura do anexo {primeiras_quatro_letras} - 1 - {tars}")
                                         if erro in content:
                                             logging.debug(
-                                                f"{hr_exec} - Erro encontrado no log, um ou mais documentos não foram copiados - M")
+                                                f"{hr_exec} - Erro encontrado no log, um ou mais documentos não foram copiados - M - {tars}")
                                         else:
-                                            logging.debug(f"{hr_exec} - Log do hotel está OK - N")
+                                            logging.debug(f"{hr_exec} - Log do hotel está OK - N - {tars}")
                                 except ValueError as e:
-                                    logging.debug(f"{hr_exec} - Erro ao copiar ao conteudo - Z")
-                                    logging.debug(f"{hr_exec} - Tentativa de leitura com metodo diferente - A")
+                                    logging.debug(f"{hr_exec} - Erro ao copiar ao conteudo - Z - {tars}")
+                                    logging.debug(f"{hr_exec} - Tentativa de leitura com metodo diferente - A - {tars}")
                                     try:
                                         with open(file_path, "r", encoding="utf-8") as file:
                                             content = file.read()
                                             if erro in content:
                                                 logging.debug(
-                                                    f"{hr_exec} - Erro encontrado no log, um ou mais documentos não foram copiados - K")
+                                                    f"{hr_exec} - Erro encontrado no log, um ou mais documentos não foram copiados - K - {tars}")
                                             else:
-                                                logging.debug(f"{hr_exec} - Log do hotel está OK - L")
+                                                logging.debug(f"{hr_exec} - Log do hotel está OK - L - {tars}")
                                     except Exception as e:
-                                        logging.debug(f"{hr_exec} - Tentativa com o novo metodo falhado - 8")
+                                        logging.debug(f"{hr_exec} - Tentativa com o novo metodo falhado - 8 - {tars}")
+                            if primeiras_quatro_letras != "diff" and primeiras_quatro_letras!="full":
+                                print(message.Subject)
                     else:
-                        logging.debug(f"{hr_exec} - Documento {primeiras_quatro_letras} está com conteudo vazio - 9")
+                        logging.debug(f"{hr_exec} - Documento {primeiras_quatro_letras} está com conteudo vazio - 9 - {tars}")
 
-    else:
-        logging.debug(f"{hr_exec} - Email com assunto '{subject}' não encontrado - 4")
+
 
         # fazer o e-mail lido mover para alguma pasta dentro do outlook
+print(f"{documents_folder}{dt_formatada}")
+time.sleep(30)
